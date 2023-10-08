@@ -1,0 +1,6 @@
+
+spring:
+  data:
+    mongodb:
+      database: jwt
+      uri: mongodb+srv://gpgaszczakpiotr:root@root.ww8wwau.mongodb.net
