@@ -87,9 +87,15 @@ public class AuthController {
         }
     }
 
-//    @PostMapping("/logout")
-//    public ResponseEntity<String> login(){
-//
-//        return new ResponseEntity<>("User logged out", HttpStatus.OK);
-//    }
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletResponse response){
+        SecurityContextHolder.clearContext();
+
+        Cookie cookie = new Cookie("jwtToken", null);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok("Logged out successfully");
+    }
 }
