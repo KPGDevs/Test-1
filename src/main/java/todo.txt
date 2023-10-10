@@ -1,0 +1,3 @@
+//TODO when I register I create new token and cookie, but when I login only new token is created
+
+//TODO fix cookies(When user is registered from same postman card the cookie is the same)

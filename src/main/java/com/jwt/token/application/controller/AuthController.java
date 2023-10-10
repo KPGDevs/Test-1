@@ -17,10 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 
@@ -33,6 +30,8 @@ public class AuthController {
     private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
     private JWTGenerator jwtGenerator;
+    @Autowired
+    private HttpServletResponse httpServletResponse;
 
     @Autowired
     public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
@@ -45,18 +44,26 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthDto loginDto){
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthDto loginDto, HttpServletResponse response){
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginDto.getUsername(),
                         loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtGenerator.generateToken(authentication);
+        Cookie cookie = new Cookie("jwtToken", token);
+
+        cookie.setPath("/");
+        cookie.setMaxAge(7200);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+
+        response.addCookie(cookie);
         return new ResponseEntity<>(new AuthResponseDTO(token), HttpStatus.OK);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody AuthDto registerDto, HttpServletResponse response) {
+    public ResponseEntity<?> register(@RequestBody AuthDto registerDto) {
         if(userRepository.existsByUsername(registerDto.getUsername())) {
             return ResponseEntity.badRequest().body("Username is taken");
         }
@@ -69,18 +76,10 @@ public class AuthController {
         user.setRoles(Collections.singletonList(roles));
 
         userRepository.save(user);
-        ResponseEntity<AuthResponseDTO> tokenResponse = login(registerDto);
+        ResponseEntity<AuthResponseDTO> tokenResponse = login(registerDto, httpServletResponse);
 
         if (tokenResponse != null && tokenResponse.getBody() != null) {
             String token = tokenResponse.getBody().getAccessToken();
-            Cookie cookie = new Cookie("jwtToken", token);
-
-            cookie.setPath("/");
-            cookie.setMaxAge(7200);
-            cookie.setHttpOnly(true);
-            cookie.setSecure(true);
-
-            response.addCookie(cookie);
             return ResponseEntity.ok(new AuthResponseDTO(token));
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred");
