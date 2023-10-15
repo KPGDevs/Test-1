@@ -9,6 +9,8 @@ import com.jwt.token.application.repository.UserRepository;
 import com.jwt.token.application.security.JWTGenerator;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Getter;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,25 +45,6 @@ public class AuthController {
         this.jwtGenerator = jwtGenerator;
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthDto loginDto, HttpServletResponse response){
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginDto.getUsername(),
-                        loginDto.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = jwtGenerator.generateToken(authentication);
-        Cookie cookie = new Cookie("jwtToken", token);
-
-        cookie.setPath("/");
-        cookie.setMaxAge(7200);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-
-        response.addCookie(cookie);
-        return new ResponseEntity<>(new AuthResponseDTO(token), HttpStatus.OK);
-    }
-
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody AuthDto registerDto) {
         if(userRepository.existsByUsername(registerDto.getUsername())) {
@@ -84,6 +67,25 @@ public class AuthController {
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred");
         }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthDto loginDto, HttpServletResponse response){
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginDto.getUsername(),
+                        loginDto.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String token = jwtGenerator.generateToken(authentication);
+        Cookie cookie = new Cookie("jwtToken", token);
+
+        cookie.setPath("/");
+        cookie.setMaxAge(7200);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+
+        response.addCookie(cookie);
+        return new ResponseEntity<>(new AuthResponseDTO(token), HttpStatus.OK);
     }
 
     @PostMapping("/logout")

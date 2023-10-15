@@ -3,3 +3,5 @@
 //TODO services maybe?
 
 //TODO upgrade authentication and authorization
+
+//TODO add/remove/update product avaible only for admin

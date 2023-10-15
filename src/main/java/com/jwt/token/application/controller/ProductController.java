@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.management.ServiceNotFoundException;
 
 @RestController
+@RequestMapping("/manage")
 public class ProductController {
     @Autowired
     private ProductService productService;
